@@ -136,7 +136,7 @@ func pgCreateProjectMember(ctx context.Context, tx *sql.Tx, create *api.ProjectM
 			role_provider,
 			payload
 		)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2, $3, $4, $5, $6, $7,)
 		RETURNING id, creator_id, created_ts, updater_id, updated_ts, project_id, role, principal_id, role_provider, payload
 	`,
 		create.CreatorID,
@@ -144,6 +144,8 @@ func pgCreateProjectMember(ctx context.Context, tx *sql.Tx, create *api.ProjectM
 		create.ProjectID,
 		create.Role,
 		create.PrincipalID,
+		create.RoleProvider,
+		create.Payload,
 	)
 
 	if err != nil {
