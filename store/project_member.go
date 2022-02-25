@@ -123,6 +123,42 @@ func (s *ProjectMemberService) DeleteProjectMember(ctx context.Context, delete *
 	return nil
 }
 
+// GetSetProjectMember get the old value of project member, and set this field with the new value
+func (s *ProjectMemberService) GetSetProjectMember(ctx context.Context, projectID int, operatorID int, createList []*api.ProjectMemberCreate) ([]*api.ProjectMember, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, FormatError(err)
+	}
+	defer tx.PTx.Rollback()
+
+	findProjectMember := &api.ProjectMemberFind{ProjectID: &projectID}
+	existingProjectMemberList, err := findProjectMemberList(ctx, tx.PTx, findProjectMember)
+	if err != nil {
+		return nil, FormatError(err)
+	}
+
+	for _, member := range existingProjectMemberList {
+		memberDelete := &api.ProjectMemberDelete{
+			ID:        member.ID,
+			DeleterID: operatorID,
+		}
+		if err := pgDeleteProjectMember(ctx, tx.PTx, memberDelete); err != nil {
+			return nil, FormatError(err)
+		}
+	}
+	for _, memberCreate := range createList {
+		if _, err := pgCreateProjectMember(ctx, tx.PTx, memberCreate); err != nil {
+			return nil, FormatError(err)
+		}
+	}
+
+	if err := tx.PTx.Commit(); err != nil {
+		return nil, FormatError(err)
+	}
+
+	return existingProjectMemberList, nil
+}
+
 // pgCreateProjectMember creates a new projectMember.
 func pgCreateProjectMember(ctx context.Context, tx *sql.Tx, create *api.ProjectMemberCreate) (*api.ProjectMember, error) {
 	// Insert row into database.
