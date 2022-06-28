@@ -63,22 +63,24 @@ const renderGuideDialog = (
   return $dialog;
 };
 
+let mutationObserver: MutationObserver | null = null;
 const waitForTargetElement = (selectors: string[][]): Promise<HTMLElement> => {
   return new Promise((resolve) => {
     let targetElement = getTargetElementBySelectors(selectors);
     if (targetElement) {
       return resolve(targetElement);
     }
+    mutationObserver?.disconnect();
 
-    const observer = new MutationObserver(() => {
+    mutationObserver = new MutationObserver(() => {
       targetElement = getTargetElementBySelectors(selectors);
       if (targetElement) {
-        observer.disconnect();
+        mutationObserver?.disconnect();
         return resolve(targetElement);
       }
     });
 
-    observer.observe(document.body, {
+    mutationObserver.observe(document.body, {
       childList: true,
       subtree: true,
     });
