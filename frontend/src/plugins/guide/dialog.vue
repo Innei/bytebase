@@ -44,12 +44,6 @@ onMounted(() => {
 </script>
 
 <style lang="postcss">
-.bb-guide-highlight-wrapper {
-  @apply absolute rounded pointer-events-none;
-  box-shadow: rgb(33 33 33 / 80%) 0px 0px 1px 2px;
-  z-index: 9999999;
-}
-
 .bb-guide-dialog {
   @apply absolute bg-white w-72 mt-1 text-black p-2 px-3 rounded-lg text-left;
   box-shadow: 0 3px 30px rgb(33 33 33 / 30%);
