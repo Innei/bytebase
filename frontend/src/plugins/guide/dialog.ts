@@ -1,6 +1,7 @@
 import { getElementBounding } from "./utils";
-import * as storage from "./storage";
-import { merge } from "lodash-es";
+
+import { App, createApp } from "vue";
+import dialogVue from "./dialog.vue";
 
 const getTargetElementBySelectors = (selectors: string[][]) => {
   let targetElement = document.body;
@@ -20,12 +21,18 @@ const getTargetElementBySelectors = (selectors: string[][]) => {
   return targetElement;
 };
 
+let currentDialogInstance: App<Element>;
+
 export const showGuideDialog = async (guideStep: any) => {
   removeGuideDialog();
   const targetElement = await waitForTargetElement(guideStep.selectors);
   if (targetElement) {
     renderHighlightWrapper(targetElement);
-    renderGuideDialog(targetElement, guideStep.title, guideStep.description);
+    currentDialogInstance = renderGuideDialog(
+      targetElement,
+      guideStep.title,
+      guideStep.description
+    );
   }
 };
 
@@ -45,52 +52,15 @@ const renderGuideDialog = (
   title: string,
   description: string
 ) => {
-  const guideDialogDiv = document.createElement("div");
-  guideDialogDiv.className = "bb-guide-dialog";
-  const bounding = getElementBounding(targetElement);
-  guideDialogDiv.style.top = `${bounding.top + bounding.height}px`;
-  guideDialogDiv.style.left = `${bounding.left}px`;
-  const titleElement = document.createElement("p");
-  titleElement.className = "bb-guide-title-text";
-  titleElement.innerText = title;
-  guideDialogDiv.appendChild(titleElement);
-  const descriptionElement = document.createElement("p");
-  descriptionElement.className = "bb-guide-description-text";
-  descriptionElement.innerText = description;
-  guideDialogDiv.appendChild(descriptionElement);
-
-  const buttonsContainer = document.createElement("div");
-  buttonsContainer.className = "bb-guide-btns-container";
-  const prevButton = document.createElement("button");
-  prevButton.className = "button";
-  prevButton.innerText = "Back";
-  const nextButton = document.createElement("button");
-  nextButton.className = "button";
-  nextButton.innerText = "Next";
-  buttonsContainer.appendChild(prevButton);
-  buttonsContainer.appendChild(nextButton);
-  guideDialogDiv.appendChild(buttonsContainer);
-
-  prevButton.onclick = () => {
-    // ...how to do prev?
-  };
-
-  nextButton.onclick = () => {
-    targetElement.click();
-  };
-
-  // TOOD(steven): support more action type: input value change...
-  targetElement.addEventListener("click", () => {
-    const { guide } = storage.get(["guide"]);
-    storage.set({
-      guide: merge(guide, {
-        stepIndex: (guide?.stepIndex ?? 0) + 1,
-      }),
-    });
-    storage.emitStorageChangedEvent();
+  const $div = document.createElement("div");
+  document.body.appendChild($div);
+  const $dialog = createApp(dialogVue, {
+    title,
+    description,
+    targetElement,
   });
-
-  document.body.appendChild(guideDialogDiv);
+  $dialog.mount($div);
+  return $dialog;
 };
 
 const waitForTargetElement = (selectors: string[][]): Promise<HTMLElement> => {
@@ -116,9 +86,7 @@ const waitForTargetElement = (selectors: string[][]): Promise<HTMLElement> => {
 };
 
 export const removeGuideDialog = () => {
-  document.body.querySelectorAll(".bb-guide-dialog")?.forEach((element) => {
-    element.remove();
-  });
+  currentDialogInstance?.unmount();
   document.body
     .querySelectorAll(".bb-guide-highlight-wrapper")
     ?.forEach((element) => {
