@@ -19,7 +19,7 @@ require (
 	github.com/jackc/pgtype v1.10.0
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/labstack/echo-contrib v0.12.0
-	github.com/labstack/echo/v4 v4.6.1
+	github.com/labstack/echo/v4 v4.9.0
 	github.com/mattn/go-sqlite3 v1.14.7
 	github.com/openark/golib v0.0.0-20210531070646-355f37940af8
 	github.com/pingcap/tidb v1.1.0-beta.0.20211209055157-9f744cdf8266
